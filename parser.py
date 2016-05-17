@@ -11,10 +11,10 @@ class MaxQuantParser:
     analysis_samples = []
     __filename = ""
 
-    __enzymes = []
-    __variable_modifications = []
-    __fixed_modifications = []
-    __params = {}
+    enzymes = []
+    variable_modifications = []
+    fixed_modifications = []
+    params = {}
 
     def __init__(self, filename):
         self.__filename = filename
@@ -70,29 +70,20 @@ class MaxQuantParser:
             elif ("experiments".__eq__(element.tag) or "fractions".__eq__(element.tag) or "paramGroupIndices".__eq__(
                     element.tag)):
                 pass
-
             elif "fastaFiles".__eq__(element.tag):
                 for fasta in element:
                     self.fasta_files.append(fasta.text)
-
             elif "enzymes".__eq__(element.tag):
                 for enzyme in element:
-                    self.__enzymes.append(enzyme.text)
-                    # self.redis.sadd("{}:{}".format(self.analysis_uuid, "enzymes"), enzyme.text)
-
+                    self.enzymes.append(enzyme.text)
             elif "variableModifications".__eq__(element.tag):
                 for variableModification in element:
-                    self.__variable_modifications.append(variableModification.text)
-                    # self.redis.sadd("{}:{}".format(self.analysis_uuid, "variableModifications"), variableModification)
-
+                    self.variable_modifications.append(variableModification.text)
             elif "fixedModifications".__eq__(element.tag):
                 for fixedModification in element:
-                    self.__fixed_modifications.append(fixedModification.text)
-                    # self.redis.sadd("{}:{}".format(self.analysis_uuid, "fixedModifications"), fixedModification.text)
-
+                    self.fixed_modifications.append(fixedModification.text)
             elif len(element) > 0:
                 self.__browse(element)
 
             else:
-                self.__params[element.tag] = element.text
-                # self.redis.hset("{}:params".format(self.analysis_uuid), element.tag, element.text)
+                self.params[element.tag] = element.text

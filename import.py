@@ -15,7 +15,6 @@ from rest import RestClient
 @click.argument("experiment_name")
 @click.option('--password', prompt=True, hide_input=True)
 def start(maxquant_file, username, password, project_name, experiment_name):
-
     parser = MaxQuantParser(maxquant_file)
     rest = RestClient(username)
     webdav = WebDav(settings.OWNCLOUD_WEBDAV_URL, username, password)
@@ -35,8 +34,6 @@ def start(maxquant_file, username, password, project_name, experiment_name):
     if not parser.files_exists():
         print("One or more of file(s) described in the mqpar.xml is not available")
         exit(1)
-
-    exit(0)
 
     print("Creating project and experiment ...")
     result = rest.create_project(project_name, experiment_name)
@@ -76,8 +73,26 @@ def start(maxquant_file, username, password, project_name, experiment_name):
     for fasta in parser.fasta_files:
         destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, mqan_folder, ntpath.basename(fasta))
         webdav.upload(fasta, destination)
-        rest.create_analysis_file(lcms_uuid, fasta, "input", "fasta")
+        rest.create_analysis_file(mqan_uuid, ntpath.basename(fasta), "input", "fasta")
 
+    print("Saving parameters ...")
+
+    for key in parser.params:
+        rest.add_extra_param(mqan_uuid, "params", key, parser.params[key])
+
+    for value in parser.enzymes:
+        rest.add_extra_param(mqan_uuid, "enzymes", "", value)
+
+    for value in parser.fixed_modifications:
+        rest.add_extra_param(mqan_uuid, "fixedModifications", "", value)
+
+    for value in parser.variable_modifications:
+        rest.add_extra_param(mqan_uuid, "variableModifications", "", value)
+
+    print("Uploading {} ...".format(ntpath.basename(maxquant_file)))
+    destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, mqan_folder, ntpath.basename(maxquant_file))
+    webdav.upload(maxquant_file, destination)
+    rest.create_analysis_file(mqan_uuid, ntpath.basename(maxquant_file), "input", "mqpart")
 
 if __name__ == '__main__':
     start()
