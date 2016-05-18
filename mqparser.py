@@ -1,6 +1,5 @@
 import xml.etree.cElementTree as Xml
 import ntpath
-import redis
 import os.path
 
 
@@ -18,14 +17,14 @@ class MaxQuantParser:
 
     def __init__(self, filename):
         self.__filename = filename
-        self.redis = redis.StrictRedis(host="172.17.0.2", port=6379, db=0)
 
     def is_valid(self):
         with open(self.__filename) as file:
             try:
                 Xml.fromstring(file.read())
                 return True
-            except Xml.ParseError:
+            except Xml.ParseError as e:
+                print(str(e))
                 return False
 
     def files_exists(self):

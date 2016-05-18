@@ -21,8 +21,12 @@ class WebDav:
 
     def upload(self, source, destination):
         print("Uploading {} ...".format(source))
-        files = {'rawfile': (ntpath.basename(source), open(source, 'rb'), 'application/octet-stream', {'Expires': '0'})}
-        response = requests.put(self.__url + destination, files=files, auth=(self.__username, self.__password))
+        #files = {'rawfile': (ntpath.basename(source), open(source, 'rb'), 'application/octet-stream', {'Expires': '0'})}
+        #response = requests.put(self.__url + destination, files=files, auth=(self.__username, self.__password))
+
+        with open(source, 'rb') as f:
+            response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
+
         if response.status_code != 200 and response.status_code != 201:
             print("Error uploading file :")
             print(response.text)

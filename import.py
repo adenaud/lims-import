@@ -3,7 +3,7 @@ import settings
 import ntpath
 import click
 
-from parser import MaxQuantParser
+from mqparser import MaxQuantParser
 from webdav import WebDav
 from rest import RestClient
 
