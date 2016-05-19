@@ -1,6 +1,7 @@
-import xml.etree.cElementTree as Xml
+import xml.etree.ElementTree as Xml
 import ntpath
 import os.path
+import codecs
 
 
 class MaxQuantParser:
@@ -19,7 +20,7 @@ class MaxQuantParser:
         self.__filename = filename
 
     def is_valid(self):
-        with open(self.__filename) as file:
+        with codecs.open(self.__filename, "rb", "UTF-8") as file:
             try:
                 Xml.fromstring(file.read())
                 return True
@@ -28,7 +29,7 @@ class MaxQuantParser:
                 return False
 
     def files_exists(self):
-        with open(self.__filename) as file:
+        with codecs.open(self.__filename, "rb", "UTF-8") as file:
             content = file.read()
             root = Xml.fromstring(content)
             raw_files = root.find("filePaths")
@@ -46,7 +47,7 @@ class MaxQuantParser:
         return file_exist
 
     def parse(self):
-        with open(self.__filename) as file:
+        with codecs.open(self.__filename, "rb", "UTF-8") as file:
             content = file.read()
             root = Xml.fromstring(content)
             self.__browse(root)
@@ -59,7 +60,8 @@ class MaxQuantParser:
                 i = 0
                 for file in element:
                     self.raw_files.append(file.text)
-                    analysis = {"sample_identifier": parent.find("experiments")[i].text,
+                    identifier = parent.find("experiments")[i].text if parent.find("experiments")[i].text is not None else ""
+                    analysis = {"sample_identifier": identifier,
                                 "filename": ntpath.basename(file.text),
                                 "full_path": file.text,
                                 "fractions": int(parent.find("fractions")[i].text),
