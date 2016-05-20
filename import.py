@@ -1,5 +1,4 @@
 import os.path
-import settings
 import ntpath
 import click
 
@@ -17,7 +16,7 @@ from rest import RestClient
 def start(maxquant_file, username, password, project_name, experiment_name):
     parser = MaxQuantParser(maxquant_file)
     rest = RestClient(username)
-    webdav = WebDav(settings.OWNCLOUD_WEBDAV_URL, username, password)
+    webdav = WebDav(username, password)
 
     if not rest.login(username, password):
         print("Invalid username or password.")
@@ -37,6 +36,9 @@ def start(maxquant_file, username, password, project_name, experiment_name):
 
     print("Creating project and experiment ...")
     result = rest.create_project(project_name, experiment_name)
+    if not "OK".__eq__(result['status']):
+        print("Unable to create project or experiment ({})".format(result['status']))
+        exit(1)
     project_folder = result["project_folder"]
     experiment_folder = result["experiment_folder"]
 
@@ -44,8 +46,11 @@ def start(maxquant_file, username, password, project_name, experiment_name):
     webdav.mkdir(project_folder)
     webdav.mkdir("{}/{}".format(project_folder, experiment_folder))
 
-    print("Importing LC-MS/MS data ...")
+    print("Creating LC-MS/MS analysis ...")
     result = rest.create_analysis("LC-MS/MS", "lc-ms")
+    if not "OK".__eq__(result['status']):
+        print("Unable to create analysis ({})".format(result['status']))
+        exit(1)
     lcms_uuid = result["analysis_uuid"]
     lcms_folder = result["analysis_folder"]
     webdav.mkdir("{}/{}/{}".format(project_folder, experiment_folder, lcms_folder))
@@ -58,13 +63,21 @@ def start(maxquant_file, username, password, project_name, experiment_name):
     print("{} Raw file(s) will be uploaded.".format(samples_count))
     for analysis in parser.analysis_samples:
         result = rest.create_sample(analysis["sample_identifier"])
-        sample_id = result["sample_id"]
-        destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, lcms_folder, analysis["filename"])
-        webdav.upload(analysis['full_path'], destination)
-        rest.create_analysis_sample(sample_id, lcms_uuid, analysis["filename"])
+        if "OK".__eq__(result['status']):
+            sample_id = result["sample_id"]
+            destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, lcms_folder, analysis["filename"])
+            webdav.upload(analysis['full_path'], destination)
+            result = rest.create_analysis_sample(sample_id, lcms_uuid, analysis["filename"])
+            if not "OK".__eq__(result['status']):
+                print("Unable to create analysis sample ({})".format(result['status']))
+        else:
+            print("Unable to create sample ({})".format(result['status']))
 
     print("Importing MaxQuant data ...")
     result = rest.create_analysis("MaxQuant", "mq-an", lcms_uuid)
+    if not "OK".__eq__(result['status']):
+        print("Unable to create analysis ({})".format(result['status']))
+        exit(1)
     mqan_uuid = result["analysis_uuid"]
     mqan_folder = result["analysis_folder"]
     webdav.mkdir("{}/{}/{}".format(project_folder, experiment_folder, mqan_folder))
@@ -73,26 +86,38 @@ def start(maxquant_file, username, password, project_name, experiment_name):
     for fasta in parser.fasta_files:
         destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, mqan_folder, ntpath.basename(fasta))
         webdav.upload(fasta, destination)
-        rest.create_analysis_file(mqan_uuid, ntpath.basename(fasta), "input", "fasta")
+        result = rest.create_analysis_file(mqan_uuid, ntpath.basename(fasta), "input", "fasta")
+        print("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(fasta), result['status']))
 
     print("Saving parameters ...")
 
     for key in parser.params:
-        rest.add_extra_param(mqan_uuid, "params", key, parser.params[key])
+        result = rest.add_extra_param(mqan_uuid, "params", key, parser.params[key])
+        if not "OK".__eq__(result['status']):
+            print("Unable to save extra param : params \"{}\" ({})".format(key, result['status']))
 
     for value in parser.enzymes:
-        rest.add_extra_param(mqan_uuid, "enzymes", "", value)
+        result = rest.add_extra_param(mqan_uuid, "enzymes", "", value)
+        if not "OK".__eq__(result['status']):
+            print("Unable to save extra param : enzymes\"{}\" ({})".format(value, result['status']))
 
     for value in parser.fixed_modifications:
-        rest.add_extra_param(mqan_uuid, "fixedModifications", "", value)
+        result = rest.add_extra_param(mqan_uuid, "fixedModifications", "", value)
+        if not "OK".__eq__(result['status']):
+            print("Unable to save extra param : fixedModifications\"{}\" ({})".format(value, result['status']))
 
     for value in parser.variable_modifications:
-        rest.add_extra_param(mqan_uuid, "variableModifications", "", value)
+        result = rest.add_extra_param(mqan_uuid, "variableModifications", "", value)
+        if not "OK".__eq__(result['status']):
+            print("Unable to save extra param : variableModifications\"{}\" ({})".format(value, result['status']))
 
     print("Uploading {} ...".format(ntpath.basename(maxquant_file)))
     destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, mqan_folder, ntpath.basename(maxquant_file))
     webdav.upload(maxquant_file, destination)
-    rest.create_analysis_file(mqan_uuid, ntpath.basename(maxquant_file), "input", "mqpart")
+    result = rest.create_analysis_file(mqan_uuid, ntpath.basename(maxquant_file), "input", "mqpart")
+    if not "OK".__eq__(result['status']):
+        print("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(maxquant_file), result['status']))
+
 
 if __name__ == '__main__':
     start()

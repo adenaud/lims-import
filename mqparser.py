@@ -60,9 +60,15 @@ class MaxQuantParser:
                 i = 0
                 for file in element:
                     self.raw_files.append(file.text)
-                    identifier = parent.find("experiments")[i].text if parent.find("experiments")[i].text is not None else ""
+
+                    filename = ntpath.basename(file.text)
+                    identifier = parent.find("experiments")[i].text
+
+                    if identifier is None:
+                        identifier = filename[:-4]
+
                     analysis = {"sample_identifier": identifier,
-                                "filename": ntpath.basename(file.text),
+                                "filename": filename,
                                 "full_path": file.text,
                                 "fractions": int(parent.find("fractions")[i].text),
                                 "paramGroupIndices": int(parent.find("paramGroupIndices")[i].text)}
@@ -88,3 +94,4 @@ class MaxQuantParser:
 
             else:
                 self.params[element.tag] = element.text
+
