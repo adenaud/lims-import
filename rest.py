@@ -56,7 +56,8 @@ class RestClient:
                                                                       "field": field,
                                                                       "key": key,
                                                                       "value": value})
-        return r.text
+        response = json.loads(r.text)
+        return response
 
     def login(self, username, password):
         response = requests.post(settings.LOGIN_URL, data={"username": username, "password": password})

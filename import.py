@@ -87,14 +87,16 @@ def start(maxquant_file, username, password, project_name, experiment_name):
         destination = "{}/{}/{}/{}".format(project_folder, experiment_folder, mqan_folder, ntpath.basename(fasta))
         webdav.upload(fasta, destination)
         result = rest.create_analysis_file(mqan_uuid, ntpath.basename(fasta), "input", "fasta")
-        print("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(fasta), result['status']))
+        if not "OK".__eq__(result['status']):
+            print("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(fasta), result['status']))
 
     print("Saving parameters ...")
 
     for key in parser.params:
-        result = rest.add_extra_param(mqan_uuid, "params", key, parser.params[key])
-        if not "OK".__eq__(result['status']):
-            print("Unable to save extra param : params \"{}\" ({})".format(key, result['status']))
+        if parser.params[key] is not None:
+            result = rest.add_extra_param(mqan_uuid, "params", key, parser.params[key])
+            if not "OK".__eq__(result['status']):
+                print("Unable to save extra param : params \"{}\" ({})".format(key, result['status']))
 
     for value in parser.enzymes:
         result = rest.add_extra_param(mqan_uuid, "enzymes", "", value)

@@ -1,5 +1,6 @@
 import requests
 import settings
+import os.path
 
 import xml.etree.ElementTree as Xml
 
@@ -27,17 +28,28 @@ class WebDav:
     def upload(self, source, destination):
         print("Uploading {} ...".format(source))
 
-        with open(source, 'rb') as f:
-            response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
-            if response.status_code == 201:
-                print("Done")
+        if not self.__file_exists(destination):
 
-            elif response.status_code == 204:
-                print("The file exists, aborting.")
+            with open(source, 'rb') as f:
+                response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
+                if response.status_code == 201:
+                    print("Done")
 
-            else:
-                print(response.status_code)
-                print("Error uploading file")
+                elif response.status_code == 204:
+                    print("The file exists, skipping.")
+
+                else:
+                    print(response.status_code)
+                    print("Error uploading file")
+        else:
+            print("The file exists, skipping.")
+
+    def __file_exists(self, path):
+        response = requests.request('PROPFIND', self.__url + path, auth=(self.__username, self.__password))
+        if response.status_code == 207:
+            return True
+        else:
+            return False
 
     def __get_error(self, response):
         error = Xml.fromstring(response.text)
