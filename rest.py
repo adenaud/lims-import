@@ -5,7 +5,6 @@ import settings
 
 class RestClient:
     __username = ""
-    __experiment_id = 0
 
     def __init__(self, username):
         self.__username = username
@@ -15,12 +14,11 @@ class RestClient:
                                                                      "experiment_name": experiment_name,
                                                                      "username": self.__username})
         response = json.loads(r.text)
-        self.__experiment_id = response["experiment_id"]
         return response
 
-    def create_analysis(self, analysis_name, analysis_type, predecessor=None):
+    def create_analysis(self, analysis_name, analysis_type, experiment_id, predecessor=None):
         data = {"analysis_name": analysis_name,
-                "experiment_id": self.__experiment_id,
+                "experiment_id": experiment_id,
                 "analysis_type": analysis_type,
                 "username": self.__username}
         if predecessor is not None:
@@ -29,9 +27,9 @@ class RestClient:
         response = json.loads(r.text)
         return response
 
-    def create_sample(self, identifier):
+    def create_sample(self, experiment_id, identifier):
         r = requests.post(settings.API_URL + "create-sample", data={"identifier": identifier,
-                                                                    "experiment_id": self.__experiment_id,
+                                                                    "experiment_id": experiment_id,
                                                                     "username": self.__username})
         response = json.loads(r.text)
         return response
