@@ -1,1 +1,1 @@
-python import.py "D:\Whey\mqpar_trypsin.xml" windowspc "Windows import test project 3" "Experiement test import"
+python import.py "D:\Nik_MS\mqpar.xml" windowspc "Nik_MS" "Nik_MS"
