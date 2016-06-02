@@ -25,13 +25,13 @@ def start(maxquant_file, username, password, project_name, experiment_name):
 
     failure = False
 
-    if not webdav.is_available():
-        print("Unable to connect to Owncloud.")
-        exit(1)
-
     if not rest.login(username, password):
         print("Invalid username or password.")
         start()
+
+    if not webdav.is_available():
+        print("Unable to connect to Owncloud.")
+        exit(1)
 
     if not os.path.isfile(maxquant_file):
         print("{} not found.".format(maxquant_file))
