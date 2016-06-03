@@ -70,6 +70,7 @@ def start(maxquant_file, username, password, project_name, experiment_name):
         import_status["project"]["folder"] = project_folder
         import_status["experiment"]["folder"] = experiment_folder
         import_status["experiment"]["id"] = experiment_id
+        generate_failure_json(import_status)
 
     print("Creating folders on Owncloud ...")
     webdav.mkdir(project_folder)

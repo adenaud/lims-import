@@ -32,6 +32,7 @@ class WebDav:
 
     def mkdir(self, directory):
         print("Making Directory : {}{}".format(self.__url, directory))
+
         response = requests.request('MKCOL', self.__url + directory, auth=(self.__username, self.__password))
         if response.status_code == 503 or response.status_code == 409:
             print("Error creating directory : " + self.__get_error(response))

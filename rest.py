@@ -16,6 +16,18 @@ class RestClient:
         response = json.loads(r.text)
         return response
 
+    def create_project2(self, project_name, parent, description):
+        if parent is None:
+            r = requests.post(settings.API_URL + "create-project2",
+                              data={"project_name": project_name, "description": description,
+                                    "username": self.__username})
+        else:
+            r = requests.post(settings.API_URL + "create-project2",
+                              data={"project_name": project_name, "parent": parent, "description": description,
+                                    "username": self.__username})
+        response = json.loads(r.text)
+        return response
+
     def create_analysis(self, analysis_name, analysis_type, experiment_id, predecessor=None):
         data = {"analysis_name": analysis_name,
                 "experiment_id": experiment_id,
