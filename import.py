@@ -198,7 +198,8 @@ def start(maxquant_file, username, password, project_name, experiment_name):
 
     if failure:
         generate_failure_json(import_status)
-
+    else:
+        os.remove("import.json")
 
 if __name__ == '__main__':
     start()
