@@ -1,3 +1,5 @@
+import logging
+
 import requests
 import settings
 import os
@@ -17,6 +19,7 @@ class WebDav:
         self.__url = settings.OWNCLOUD_WEBDAV_URL
         self.__username = username
         self.__password = password
+        self.__log = logging.getLogger("lims_import")
 
     def is_available(self):
         available = False
@@ -25,46 +28,47 @@ class WebDav:
             if response.status_code == 207:
                 available = True
             else:
-                print(response.text)
+                self.__log.error(response.text)
         except ConnectionError:
             pass
         return available
 
     def mkdir(self, directory):
-        print("Making Directory : {}{}".format(self.__url, directory))
+        self.__log.info("Making Directory : {}{}".format(self.__url, directory))
 
         response = requests.request('MKCOL', self.__url + directory, auth=(self.__username, self.__password))
         if response.status_code == 503 or response.status_code == 409:
-            print("Error creating directory : " + self.__get_error(response))
+            self.__log.error("Error creating directory : " + self.__get_error(response))
         elif response.status_code == 405:
-            print("Directory already exists, nothing to do.")
+            self.__log.warning("Directory already exists, nothing to do.")
         else:
-            print("Done")
+            self.__log.info("Done")
 
     def upload(self, source, destination):
         success = False
-        print("Uploading {} ...".format(source))
+        self.__log.info("Uploading {} ...".format(source))
 
         if not self.__file_exists(destination):
 
             with open(source, 'rb') as f:
                 response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
                 if response.status_code == 201:
-                    print("Done")
+                    self.__log.info("Done")
                     success = True
 
                 elif response.status_code == 204:
-                    print("The file exists, skipping.")
+                    self.__log.warning("The file exists, skipping.")
                     success = True
 
                 elif self.__get_file_size(destination) != os.path.getsize(source):
-                    print("Error the size of the uploaded file don't correspond to the original")
+                    self.__log.error("Error the size of the uploaded file don't correspond to the original")
 
                 else:
-                    print(response.status_code)
-                    print("Error uploading file")
+                    self.__log.error(response.status_code)
+                    self.__log.error("Error uploading file")
         else:
-            print("The file exists, skipping.")
+            self.__log.warning("The file exists, skipping.")
+            success = True
         return success
 
     def __file_exists(self, path):

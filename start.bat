@@ -1,1 +1,0 @@
-python import.py "D:\Nik_MS\mqpar.xml" windowspc "Nik_MS" "Nik_MS"

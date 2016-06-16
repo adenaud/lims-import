@@ -5,7 +5,6 @@ import codecs
 
 
 class MaxQuantParser:
-
     raw_files = []
     fasta_files = []
     analysis_samples = []
@@ -19,11 +18,22 @@ class MaxQuantParser:
     def __init__(self, filename):
         self.__filename = filename
 
-    def is_valid(self):
-        with codecs.open(self.__filename, "rb", "UTF-8") as file:
+    @staticmethod
+    def is_maxquant_file(filename):
+        if (filename.endswith(".xml") or filename.endswith(".XML")) and MaxQuantParser.is_valid(filename):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def is_valid(filename):
+        with codecs.open(filename, "rb", "UTF-8") as file:
             try:
-                Xml.fromstring(file.read())
-                return True
+                root = Xml.fromstring(file.read())
+                if "MaxQuantParams".__eq__(root.tag):
+                    return True
+                else:
+                    return False
             except Xml.ParseError as e:
                 print(str(e))
                 return False
@@ -56,7 +66,6 @@ class MaxQuantParser:
         for element in parent:
 
             if "filePaths".__eq__(element.tag):
-                print("Upload files and and sample analysis")
                 i = 0
                 for file in element:
                     self.raw_files.append(file.text)
@@ -95,3 +104,9 @@ class MaxQuantParser:
             else:
                 self.params[element.tag] = element.text
 
+    @staticmethod
+    def get_raw_files(filename):
+        file = codecs.open(filename, "rb", "UTF-8")
+        content = file.read()
+        root = Xml.fromstring(content)
+        return root.find("filePaths")

@@ -28,6 +28,13 @@ class RestClient:
         response = json.loads(r.text)
         return response
 
+    def create_experiment(self, experiment_name, project_id):
+        r = requests.post(settings.API_URL + "create-experiment", data={"experiment_name": experiment_name,
+                                                                        "project_id": project_id,
+                                                                        "username": self.__username})
+        response = json.loads(r.text)
+        return response
+
     def create_analysis(self, analysis_name, analysis_type, experiment_id, predecessor=None):
         data = {"analysis_name": analysis_name,
                 "experiment_id": experiment_id,
