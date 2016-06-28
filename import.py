@@ -6,6 +6,7 @@ import progressbar
 
 from importer import Importer
 from rest import RestClient
+from webdav import WebDav
 
 
 @click.command()
@@ -14,8 +15,11 @@ from rest import RestClient
 @click.option('--password', prompt=True, hide_input=True)
 def start(path, username, password):
 
-    login_attempts = 0
     rest = RestClient(username)
+    webdav = WebDav(username, password)
+
+    login_attempts = 0
+
     if not rest.login(username, password):
         login_attempts += 1
         print("Invalid username or password." + username)
@@ -36,6 +40,15 @@ def start(path, username, password):
 
     log.addHandler(sh)
     log.addHandler(fh)
+
+    if not webdav.is_available():
+        log.error("Unable to connect to Owncloud.")
+        exit(1)
+
+    for project in path:
+        if not os.path.exists(project):
+            log.error("{} not found.".format(project))
+            exit(1)
 
     total = 0
     for project in path:

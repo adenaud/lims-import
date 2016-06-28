@@ -8,6 +8,13 @@ from mqparser import MaxQuantParser
 from importapi import ImportAPI
 
 
+class AnalysisType:
+
+    LCMSMS = "lcmsms"
+    MAXQUANT = "maxquant"
+    GENERIC = "generic"
+
+
 class Importer:
     def __init__(self, username, password):
         self.__username = username
@@ -44,17 +51,17 @@ class Importer:
     def __import_maxquant(self, experiment, maxquant_file):
 
         self.__log.info("2. Importing LC-MS/MS data ...")
-        lcms = self.__api.create_analysis("LC-MS/MS", "lc-ms", experiment)
+        lcms = self.__api.create_analysis("LC-MS/MS", AnalysisType.LCMSMS, experiment)
 
         parser = MaxQuantParser(maxquant_file)
         parser.parse()
 
-        self.__log.info("3. Importing MaxQuant data ...")
-        mqan = self.__api.create_analysis("MaxQuant", "mq-an", experiment)
-
-        self.__log.info("4. Importing {} raw file(s) ...".format(len(parser.analysis_samples)))
+        self.__log.info("3. Importing {} raw file(s) ...".format(len(parser.analysis_samples)))
         for analysis_sample in parser.analysis_samples:
-            self.__api.create_analysis_sample(analysis_sample, lcms, mqan)
+            self.__api.create_analysis_sample(analysis_sample, lcms)
+
+        self.__log.info("4. Importing MaxQuant data ...")
+        mqan = self.__api.create_analysis("MaxQuant", AnalysisType.MAXQUANT, experiment, lcms)
 
         self.__log.info("5. Importing {} fasta file(s) ...".format(len(parser.fasta_files)))
         for fasta in parser.fasta_files:

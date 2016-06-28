@@ -41,7 +41,7 @@ class RestClient:
                 "analysis_type": analysis_type,
                 "username": self.__username}
         if predecessor is not None:
-            data["predecessor"] = predecessor
+            data["predecessor"] = predecessor['uuid']
         r = requests.post(settings.API_URL + "create-analysis", data=data)
         response = json.loads(r.text)
         return response

@@ -20,14 +20,14 @@ class JsonConfig:
     def add_project(self, project):
         self.__json['projects'][project['name']] = copy.deepcopy(project)
         self.__json['projects'][project['name']]['experiments'] = {}
-        self.__write()
+        self.write()
 
     def add_experiment(self, experiment):
         project = experiment['project']
         cpy = copy.deepcopy(experiment)
         del cpy['project']
         self.__json['projects'][project['name']]["experiments"][experiment['name']] = cpy
-        self.__write()
+        self.write()
         pass
 
     def add_analysis(self, analysis):
@@ -37,7 +37,7 @@ class JsonConfig:
         del cpy['experiment']
         self.__json["projects"][project['name']]["experiments"][experiment['name']]['analyses'][
             cpy['type']] = cpy
-        self.__write()
+        self.write()
 
     def add_sample(self, sample):
         cpy = copy.deepcopy(sample)
@@ -46,7 +46,7 @@ class JsonConfig:
         del cpy['experiment']
         self.__json["projects"][project['name']]["experiments"][experiment['name']]['samples'][
             sample['identifier']] = cpy
-        self.__write()
+        self.write()
 
     def add_sample_analysis(self, sample_analysis):
         cpy = copy.deepcopy(sample_analysis)
@@ -59,7 +59,7 @@ class JsonConfig:
 
         self.__json["projects"][project['name']]["experiments"][experiment['name']]['analyses'][analysis['type']][
             "sample_analyses"][sample_analysis['sample']['identifier']] = cpy
-        self.__write()
+        self.write()
 
     def add_analysis_file(self, analysis_file):
         cpy = copy.deepcopy(analysis_file)
@@ -71,7 +71,7 @@ class JsonConfig:
 
         self.__json["projects"][project['name']]["experiments"][experiment['name']]['analyses'][analysis['type']][
             "analysis_files"][cpy['filename']] = cpy
-        self.__write()
+        self.write()
 
     def add_saved_parameters(self, category, analysis):
         analysis_c = copy.deepcopy(analysis)
@@ -79,7 +79,7 @@ class JsonConfig:
         project = experiment['project']
         self.__json["projects"][project['name']]["experiments"][experiment['name']]['analyses'][analysis['type']][
             'saved_parameters'].append(category)
-        self.__write()
+        self.write()
 
     def exists(self, path):
         expr = parse(path)
@@ -100,6 +100,6 @@ class JsonConfig:
     def get_project(self, name):
         return self.__get("projects['{}']".format(name))
 
-    def __write(self):
+    def write(self):
         with open("import.json", "w") as file:
             file.write(json.dumps(self.__json, indent=4))

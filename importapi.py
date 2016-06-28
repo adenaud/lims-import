@@ -2,9 +2,9 @@ import logging
 import ntpath
 import os
 
+from jsonconfig import JsonConfig
 from rest import RestClient
 from webdav import WebDav
-from jsonconfig import JsonConfig
 
 
 class ImportAPI:
@@ -67,14 +67,14 @@ class ImportAPI:
             self.__json.add_experiment(experiment)
         return experiment
 
-    def create_analysis(self, name, analysis_type, experiment):
+    def create_analysis(self, name, analysis_type, experiment, predecessor=None):
 
         if experiment['analyses'].__contains__(analysis_type):
             analysis = experiment['analyses'][analysis_type]
             analysis['experiment'] = experiment
         else:
 
-            result = self.__rest.create_analysis(name, analysis_type, experiment['id'])
+            result = self.__rest.create_analysis(name, analysis_type, experiment['id'], predecessor)
 
             if not "OK".__eq__(result['status']):
                 self.__log.error("Unable to create analysis ({})".format(result['status']))
@@ -89,10 +89,9 @@ class ImportAPI:
             self.__json.add_analysis(analysis)
         return analysis
 
-    def create_analysis_sample(self, analysis_sample, lcms_analysis, mqan_analysis):
+    def create_analysis_sample(self, analysis_sample, lcms_analysis):
 
-        if not lcms_analysis['sample_analyses'].__contains__(analysis_sample['sample_identifier']) and not \
-                mqan_analysis['analysis_files'].__contains__(analysis_sample['filename']):
+        if not lcms_analysis['sample_analyses'].__contains__(analysis_sample['sample_identifier']):
 
             experiment = lcms_analysis['experiment']
             destination = "{}/{}".format(lcms_analysis['folder'], analysis_sample["filename"])
@@ -111,17 +110,6 @@ class ImportAPI:
                         else:
                             self.__failure = True
                             self.__log.error("Unable to create analysis sample ({})".format(result1['status']))
-
-                    if not mqan_analysis['analysis_files'].__contains__(analysis_sample['filename']):
-                        result2 = self.__rest.create_analysis_file(mqan_analysis['uuid'], analysis_sample['filename'],
-                                                                   "input", "raw")
-                        if "OK".__eq__(result2['status']):
-                            analysis_file = {'id': result2['file_id'], "filename": analysis_sample['filename'],
-                                             "analysis": mqan_analysis}
-                            self.__json.add_analysis_file(analysis_file)
-                        else:
-                            self.__failure = True
-                            self.__log.error("Unable to create analysis file ({})".format(result2['status']))
 
     def create_sample(self, identifier, experiment):
 
@@ -144,7 +132,8 @@ class ImportAPI:
         destination = "{}/{}".format(analysis['folder'], ntpath.basename(fasta))
 
         if self.__dav.upload(fasta, destination):
-            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(fasta), "input", "fasta")
+            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(fasta), "attachment",
+                                                      "attachment0")
             if "OK".__eq__(result['status']):
                 file = {"id": result['file_id'], "filename": ntpath.basename(fasta), "analysis": analysis}
                 self.__json.add_analysis_file(file)
@@ -182,17 +171,16 @@ class ImportAPI:
     def import_maxquant_file(self, maxquant_file, analysis):
         destination = "{}/{}".format(analysis['folder'], ntpath.basename(maxquant_file))
         if self.__dav.upload(maxquant_file, destination):
-            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(maxquant_file), "input",
-                                                      "mqpart")
+            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(maxquant_file), "attachment",
+                                                      "attachment1")
             if not "OK".__eq__(result['status']):
                 self.__failure = True
                 self.__log.error("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(maxquant_file),
                                                                                      result['status']))
 
     def finish(self):
-        pass
-        # if self.__failure:
-        #    self.__generate_failure_json()
-        # else:
-        #    if os.path.exists("import.json"):
-        #        os.remove("import.json")
+        if self.__failure:
+            self.__json.write()
+        else:
+            if os.path.exists("import.json"):
+                os.remove("import.json")
