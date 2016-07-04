@@ -102,7 +102,7 @@ class ImportAPI:
 
                     if not lcms_analysis['sample_analyses'].__contains__(analysis_sample['sample_identifier']):
                         result1 = self.__rest.create_analysis_sample(sample['id'], lcms_analysis['uuid'],
-                                                                     analysis_sample["filename"])
+                                                                     destination)
                         if "OK".__eq__(result1['status']):
                             analysis_s = {'id': result1['analysis_sample_id'], "sample": sample,
                                           "analysis": lcms_analysis, "filename": analysis_sample['filename']}
@@ -132,8 +132,7 @@ class ImportAPI:
         destination = "{}/{}".format(analysis['folder'], ntpath.basename(fasta))
 
         if self.__dav.upload(fasta, destination):
-            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(fasta), "attachment",
-                                                      "attachment0")
+            result = self.__rest.create_analysis_file(analysis['uuid'], destination, "attachment", "attachment0")
             if "OK".__eq__(result['status']):
                 file = {"id": result['file_id'], "filename": ntpath.basename(fasta), "analysis": analysis}
                 self.__json.add_analysis_file(file)
@@ -171,8 +170,7 @@ class ImportAPI:
     def import_maxquant_file(self, maxquant_file, analysis):
         destination = "{}/{}".format(analysis['folder'], ntpath.basename(maxquant_file))
         if self.__dav.upload(maxquant_file, destination):
-            result = self.__rest.create_analysis_file(analysis['uuid'], ntpath.basename(maxquant_file), "attachment",
-                                                      "attachment1")
+            result = self.__rest.create_analysis_file(analysis['uuid'], destination, "attachment", "attachment1")
             if not "OK".__eq__(result['status']):
                 self.__failure = True
                 self.__log.error("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(maxquant_file),

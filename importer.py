@@ -48,6 +48,8 @@ class Importer:
                     self.__dav.upload(path + os.sep + file, project['folder'] + os.sep + file)
                     self.on_update.fire()
 
+        self.__api.finish()
+
     def __import_maxquant(self, experiment, maxquant_file):
 
         self.__log.info("2. Importing LC-MS/MS data ...")
@@ -75,5 +77,3 @@ class Importer:
 
         self.__log.info("7. Uploading MaxQuant file ({}) ...".format(ntpath.basename(maxquant_file)))
         self.__api.import_maxquant_file(maxquant_file, mqan)
-
-        self.__api.finish()
