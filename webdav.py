@@ -48,26 +48,30 @@ class WebDav:
         success = False
         self.__log.info("Uploading {} ...".format(source))
 
-        if not self.__file_exists(destination):
+        if os.path.getsize(source) > 0:
+            if not self.__file_exists(destination):
 
-            with open(source, 'rb') as f:
-                response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
-                if response.status_code == 201:
-                    self.__log.info("Done")
-                    success = True
+                with open(source, 'rb') as f:
+                    response = requests.put(self.__url + destination, data=f, auth=(self.__username, self.__password))
+                    if response.status_code == 201:
+                        self.__log.info("Done")
+                        success = True
 
-                elif response.status_code == 204:
-                    self.__log.warning("The file exists, skipping.")
-                    success = True
+                    elif response.status_code == 204:
+                        self.__log.warning("The file exists, skipping.")
+                        success = True
 
-                elif self.__get_file_size(destination) != os.path.getsize(source):
-                    self.__log.error("Error the size of the uploaded file don't correspond to the original")
+                    elif self.__get_file_size(destination) != os.path.getsize(source):
+                        self.__log.error("Error the size of the uploaded file don't correspond to the original")
 
-                else:
-                    self.__log.error(response.status_code)
-                    self.__log.error("Error uploading file")
+                    else:
+                        self.__log.error(response.status_code)
+                        self.__log.error("Error uploading file")
+            else:
+                self.__log.warning("The file exists, skipping.")
+                success = True
         else:
-            self.__log.warning("The file exists, skipping.")
+            self.__log.warning("The file is empty, skipping.")
             success = True
         return success
 

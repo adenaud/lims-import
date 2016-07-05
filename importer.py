@@ -27,35 +27,42 @@ class Importer:
 
     def start(self, path):
         self.__api.start(path)
-        self.__browse(None, path)
+        self.__browse(path)
 
-    def __browse(self, parent, path):
+    def __browse(self, path, project=None):
 
-        self.__log.info("1. Creating project {} ...".format(ntpath.basename(path)))
-        project = self.__api.create_project(ntpath.basename(path), path, parent)
-        self.on_update.fire()
+        if os.path.exists(path + os.sep + "README.txt"):
+            self.__log.info("1. Creating project {} ...".format(ntpath.basename(path)))
+            project = self.__api.create_project(ntpath.basename(path), path, project)
+            self.on_update.fire()
+        else:
+            self.__dav.mkdir(path)
 
         for file in os.listdir(path):
-            if MaxQuantParser.is_maxquant_file(path + os.sep + file):
+            if project is not None and MaxQuantParser.is_maxquant_file(path + os.sep + file):
                 self.__log.info("MaxQuant file detected")
                 experiment = self.__api.create_experiment(project['name'], project)
-                self.__import_maxquant(experiment, path + os.sep + file)
+                self.__import_maxquant(experiment, path, file)
 
-            if not file.startswith("."):
+            elif "combined".__eq__(file):
+                self.__browse(path + os.sep + file + os.sep + "txt", project)
+                self.__dav.mkdir(path + os.sep + file)
+
+            elif not file.startswith("."):
                 if os.path.isdir(path + os.sep + file):
-                    self.__browse(project['id'], path + os.sep + file)
+                    self.__browse(path + os.sep + file, project)
                 else:
-                    self.__dav.upload(path + os.sep + file, project['folder'] + os.sep + file)
+                    self.__dav.upload(path + os.sep + file, path + os.sep + file)
                     self.on_update.fire()
 
         self.__api.finish()
 
-    def __import_maxquant(self, experiment, maxquant_file):
+    def __import_maxquant(self, experiment, path, maxquant_file):
 
         self.__log.info("2. Importing LC-MS/MS data ...")
         lcms = self.__api.create_analysis("LC-MS/MS", AnalysisType.LCMSMS, experiment)
 
-        parser = MaxQuantParser(maxquant_file)
+        parser = MaxQuantParser(path + os.sep + maxquant_file)
         parser.parse()
 
         self.__log.info("3. Importing {} raw file(s) ...".format(len(parser.analysis_samples)))
@@ -75,5 +82,8 @@ class Importer:
         self.__api.import_parameters(parser.fixed_modifications, "fixedModifications", mqan)
         self.__api.import_parameters(parser.variable_modifications, "variableModifications", mqan)
 
-        self.__log.info("7. Uploading MaxQuant file ({}) ...".format(ntpath.basename(maxquant_file)))
-        self.__api.import_maxquant_file(maxquant_file, mqan)
+        self.__log.info("7. Uploading MaxQuant file ({}) ...".format(maxquant_file))
+        self.__api.import_maxquant_file(path + os.sep + maxquant_file, mqan)
+
+        self.__log.info("8. Setting output folder ...")
+        self.__api.import_output_folder(path + os.sep + "combined", mqan)

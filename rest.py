@@ -23,7 +23,7 @@ class RestClient:
                                     "username": self.__username})
         else:
             r = requests.post(settings.API_URL + "create-project2",
-                              data={"project_name": project_name, "parent": parent, "description": description,
+                              data={"project_name": project_name, "parent": parent['id'], "description": description,
                                     "username": self.__username})
         response = json.loads(r.text)
         return response
@@ -60,11 +60,12 @@ class RestClient:
         response = json.loads(r.text)
         return response
 
-    def create_analysis_file(self, analysis_uuid, filename, io_type, field):
+    def create_analysis_file(self, analysis_uuid, filename, io_type, field, is_file=True):
         r = requests.post(settings.API_URL + "create-analysis-file", data={"analysis_uuid": analysis_uuid,
                                                                            "file": filename,
                                                                            "type": io_type,
-                                                                           "field": field})
+                                                                           "field": field,
+                                                                           "is_file": is_file})
         response = json.loads(r.text)
         return response
 

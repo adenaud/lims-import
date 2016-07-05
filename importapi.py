@@ -176,6 +176,12 @@ class ImportAPI:
                 self.__log.error("Unable to create analysis file \"{}\" ({})".format(ntpath.basename(maxquant_file),
                                                                                      result['status']))
 
+    def import_output_folder(self, output_folder, analysis):
+        result = self.__rest.create_analysis_file(analysis['uuid'], output_folder, "output", "output", False)
+        if not "OK".__eq__(result['status']):
+            self.__failure = True
+            self.__log.error("Unable to set output folder ({})".format(result['status']))
+
     def finish(self):
         if self.__failure:
             self.__json.write()
