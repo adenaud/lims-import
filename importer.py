@@ -81,6 +81,8 @@ class Importer:
         self.__api.import_parameters(parser.enzymes, "enzymes", mqan)
         self.__api.import_parameters(parser.fixed_modifications, "fixedModifications", mqan)
         self.__api.import_parameters(parser.variable_modifications, "variableModifications", mqan)
+        self.__api.import_parameters(parser.raw_files, "raw", mqan)
+        self.__api.import_parameters(parser.fasta_files, "fasta", mqan)
 
         self.__log.info("7. Uploading MaxQuant file ({}) ...".format(maxquant_file))
         self.__api.import_maxquant_file(path + os.sep + maxquant_file, mqan)
