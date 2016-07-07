@@ -80,7 +80,7 @@ class ImportAPI:
                 self.__log.error("Unable to create analysis ({})".format(result['status']))
                 exit(1)
             uuid = result["analysis_uuid"]
-            folder = "{}/{}".format(experiment["folder"], analysis_type)
+            folder = "{}/{}".format(experiment["folder"], name)
 
             self.__dav.mkdir(folder)
 
@@ -114,7 +114,7 @@ class ImportAPI:
     def create_sample(self, identifier, experiment):
 
         if experiment['samples'].__contains__(identifier):
-            return experiment['samples']['identifier']
+            return experiment['samples'][identifier]
         else:
             result = self.__rest.create_sample(experiment['id'], identifier)
 

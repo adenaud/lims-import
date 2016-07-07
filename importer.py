@@ -60,7 +60,7 @@ class Importer:
     def __import_maxquant(self, experiment, path, maxquant_file):
 
         self.__log.info("2. Importing LC-MS/MS data ...")
-        lcms = self.__api.create_analysis("LC-MS/MS", AnalysisType.LCMSMS, experiment)
+        lcms = self.__api.create_analysis("LC-MSMS", AnalysisType.LCMSMS, experiment)
 
         parser = MaxQuantParser(path + os.sep + maxquant_file)
         parser.parse()

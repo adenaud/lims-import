@@ -1,3 +1,8 @@
+
+# Python interface to Owncloud.
+# Based on the WebDav protocol (http://www.webdav.org/specs/rfc2518.html)
+# More exemples on https://msdn.microsoft.com/en-us/library/aa142917%28v=exchg.65%29.aspx
+
 import logging
 
 import requests
